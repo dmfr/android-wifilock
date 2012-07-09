@@ -76,7 +76,7 @@ public class MyService extends Service {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
 		chkHighPerf = prefs.getBoolean("chkHighPerf", true);
 		chkWifiLock = prefs.getBoolean("chkWifiLock", true);
-		chkWifiPingKA = prefs.getBoolean("chkWifiPingKA", true);
+		chkWifiPingKA = prefs.getBoolean("chkWifiPingKA", false);
 	}
 	public void onDestroy(){
 		if( mWifiLock != null && mWifiLock.isHeld() ) {

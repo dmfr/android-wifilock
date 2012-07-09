@@ -13,7 +13,7 @@
             android:title="WifiLock On" />
         <CheckBoxPreference
             android:key="chkWifiPingKA"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:summary="Workaround for bug/timeout"
             android:title="Use ping as keepalive" />
 
