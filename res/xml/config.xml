@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+        <CheckBoxPreference
+            android:key="chkHighPerf"
+            android:defaultValue="true"
+            android:summary="High wifi perf under AC/USB"   
+            android:title="HighPerf when plugged" />
+        <CheckBoxPreference
+            android:key="chkWifiLock"
+            android:defaultValue="true"
+            android:summary="Enforce always-on wifi policy"
+            android:title="WifiLock On" />
+        <CheckBoxPreference
+            android:key="chkWifiPingKA"
+            android:defaultValue="true"
+            android:summary="Workaround for bug/timeout"
+            android:title="Use ping as keepalive" />
+
+</PreferenceScreen>
