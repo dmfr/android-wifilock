@@ -11,15 +11,21 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class MyService extends Service {
+	
+	private boolean chkHighPerf ;
+	private boolean chkWifiLock ;
+	private boolean chkWifiPingKA ;
 	
 	private boolean isPlugged = false ;
 	private boolean isWirelessOn = false ;
@@ -65,10 +71,27 @@ public class MyService extends Service {
 		super.onCreate();
 		registerReceiver(this.batteryInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 		registerReceiver(this.mConnReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+		
+		// Get some preferences
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+		chkHighPerf = prefs.getBoolean("chkHighPerf", true);
+		chkWifiLock = prefs.getBoolean("chkWifiLock", true);
+		chkWifiPingKA = prefs.getBoolean("chkWifiPingKA", true);
 	}
 	public void onDestroy(){
+		if( mWifiLock != null && mWifiLock.isHeld() ) {
+			mWifiLock.release() ;
+		}
+		if( mWifiLockHighperf != null && mWifiLockHighperf.isHeld() ) {
+			mWifiLockHighperf.release() ;
+		}
+		if( pingThread != null ) {
+			pingThreadStop() ;
+		}
+		
 		this.unregisterReceiver(this.batteryInfoReceiver);
 		this.unregisterReceiver(this.mConnReceiver);
+		
 		super.onDestroy();
 	}
 	
@@ -104,13 +127,25 @@ public class MyService extends Service {
 			mWifiLock = ((WifiManager)getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL,"WifiLock") ;
 		}
 		
-		if( currentStateWifilock && mWifiLock != null && !mWifiLock.isHeld() ) {
-			mWifiLock.acquire() ;
-			pingThreadStart() ;
+		if( currentStateWifilock ) {
+			if( chkWifiLock ) {
+				if( mWifiLock != null && !mWifiLock.isHeld() ) {
+					mWifiLock.acquire() ;
+				}
+				if( chkWifiPingKA ) {
+					pingThreadStart() ;
+				}
+			}
 		}
-		if( !currentStateWifilock && mWifiLock != null && mWifiLock.isHeld() ) {
-			mWifiLock.release() ;
-			pingThreadStop() ;
+		if( !currentStateWifilock ) {
+			if( chkWifiLock ) {
+				if( mWifiLock != null && mWifiLock.isHeld() ) {
+					mWifiLock.release() ;
+				}
+				if( chkWifiPingKA ) {
+					pingThreadStop() ;
+				}
+			}
 		}
 	}
 	private synchronized void updateWifilockStateHighperf() {
@@ -125,11 +160,15 @@ public class MyService extends Service {
 			mWifiLockHighperf = ((WifiManager)getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF,"WifiLockHighPerf") ;
 		}
 		
-		if( currentStateWifilockHighperf && mWifiLockHighperf != null && !mWifiLockHighperf.isHeld() ) {
-			mWifiLockHighperf.acquire() ;
+		if( currentStateWifilockHighperf && chkHighPerf ) {
+			if( mWifiLockHighperf != null && !mWifiLockHighperf.isHeld() ) {
+				mWifiLockHighperf.acquire() ;
+			}
 		}
-		if( !currentStateWifilockHighperf && mWifiLockHighperf != null && mWifiLockHighperf.isHeld() ) {
-			mWifiLockHighperf.release() ;
+		if( !currentStateWifilockHighperf && chkHighPerf ) {
+			if( mWifiLockHighperf != null && mWifiLockHighperf.isHeld() ) {
+				mWifiLockHighperf.release() ;
+			}
 		}
 	}
 	
