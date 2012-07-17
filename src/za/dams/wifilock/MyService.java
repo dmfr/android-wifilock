@@ -36,6 +36,8 @@ public class MyService extends Service {
 	
 	private Thread pingThread ;
 	
+	private Thread watchThread ;
+	
 	private WifiManager.WifiLock mWifiLock ;
 	private WifiManager.WifiLock mWifiLockHighperf ;
 	
@@ -161,11 +163,13 @@ public class MyService extends Service {
 		}
 		
 		if( currentStateWifilockHighperf && chkHighPerf ) {
+			watchThreadStart() ;
 			if( mWifiLockHighperf != null && !mWifiLockHighperf.isHeld() ) {
 				mWifiLockHighperf.acquire() ;
 			}
 		}
 		if( !currentStateWifilockHighperf && chkHighPerf ) {
+			watchThreadStop() ;
 			if( mWifiLockHighperf != null && mWifiLockHighperf.isHeld() ) {
 				mWifiLockHighperf.release() ;
 			}
@@ -259,4 +263,47 @@ public class MyService extends Service {
 				((i >> 16 ) & 0xFF) + "." +
 				( (i >> 24 ) & 0xFF) ;
 	}
+	
+	
+	private void watchThreadStart() {
+		if( watchThread != null && watchThread.isAlive() ) {
+			return ;
+		}
+		
+		watchThread = new Thread(){
+	        public void run() {
+	        	while(true) {
+	        		if( currentThread().isInterrupted() ){
+	        			break ;
+	        		}
+	        		
+	        		IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+	        		Intent batteryStatus = registerReceiver(null, ifilter);	        
+	        		int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+	        		boolean isCharging = ( status == BatteryManager.BATTERY_STATUS_CHARGING ||
+	        				status == BatteryManager.BATTERY_STATUS_FULL );
+	        		if( isCharging != isPlugged ) {
+	        			isPlugged = isCharging ;
+	        			updateWifilockStateWifi() ;
+	        			updateWifilockStateHighperf() ;
+	        		}
+	        		
+	        		try{
+	        			Thread.sleep(60*1000) ;
+	        		}
+	        		catch( InterruptedException e ){
+	        			break ;
+	        		}
+	        	}
+	        };
+		};
+		watchThread.start() ;
+	}
+	private void watchThreadStop() {
+		if( watchThread != null && watchThread.isAlive() ) {
+			watchThread.interrupt() ;
+			watchThread = null ;
+		}
+	}
+	
 }
