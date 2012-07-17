@@ -163,13 +163,13 @@ public class MyService extends Service {
 		}
 		
 		if( currentStateWifilockHighperf && chkHighPerf ) {
-			watchThreadStart() ;
+			//watchThreadStart() ;
 			if( mWifiLockHighperf != null && !mWifiLockHighperf.isHeld() ) {
 				mWifiLockHighperf.acquire() ;
 			}
 		}
 		if( !currentStateWifilockHighperf && chkHighPerf ) {
-			watchThreadStop() ;
+			//watchThreadStop() ;
 			if( mWifiLockHighperf != null && mWifiLockHighperf.isHeld() ) {
 				mWifiLockHighperf.release() ;
 			}
@@ -264,7 +264,7 @@ public class MyService extends Service {
 				( (i >> 24 ) & 0xFF) ;
 	}
 	
-	
+	/*
 	private void watchThreadStart() {
 		if( watchThread != null && watchThread.isAlive() ) {
 			return ;
@@ -305,5 +305,6 @@ public class MyService extends Service {
 			watchThread = null ;
 		}
 	}
+	*/
 	
 }
